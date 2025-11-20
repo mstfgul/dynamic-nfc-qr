@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { redirect, notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import connectDB from '@/lib/mongodb';
 import Link from '@/models/Link';
@@ -39,21 +39,33 @@ export default async function RedirectPage({
 }) {
   const { shortCode } = await params;
 
+  console.log('🔍 Looking for shortCode:', shortCode);
+
   try {
     await connectDB();
+    console.log('✅ MongoDB connected');
 
     const link = await Link.findOne({ shortCode, isActive: true });
+    console.log('🔗 Link found:', link ? `${link.destinationUrl}` : 'NOT FOUND');
 
     if (!link) {
-      redirect('/404');
+      console.log('❌ Link not found, showing 404');
+      notFound();
     }
 
     const headersList = await headers();
     await trackClick(link._id.toString(), shortCode, headersList);
 
+    console.log('➡️ Redirecting to:', link.destinationUrl);
     redirect(link.destinationUrl);
-  } catch (error) {
-    console.error('Redirect error:', error);
-    redirect('/404');
+  } catch (error: any) {
+    if (error.message === 'NEXT_NOT_FOUND') {
+      throw error;
+    }
+    if (error.digest?.includes('NEXT_REDIRECT')) {
+      throw error;
+    }
+    console.error('❌ Redirect error:', error);
+    notFound();
   }
 }
