@@ -6,7 +6,13 @@
       "Bash(npm run build:*)",
       "Bash(npm run dev:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nDinamik NFC & QR kod platformu eklendi\n\n- QR kod otomatik oluşturma\n- Dinamik yönlendirme sistemi\n- MongoDB analitik tracking\n- Admin panel ve dashboard\n- Form input text color düzeltildi\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git commit -m \"$(cat <<''EOF''\nDinamik NFC & QR kod platformu eklendi\n\n- QR kod otomatik oluşturma\n- Dinamik yönlendirme sistemi\n- MongoDB analitik tracking\n- Admin panel ve dashboard\n- Form input text color düzeltildi\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(npx vercel --version)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(npx vercel:*)",
+      "Bash(curl:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
