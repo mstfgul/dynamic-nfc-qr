@@ -43,6 +43,15 @@ export default function AdminPage() {
     clientId: '',
   });
 
+  // Edit state
+  const [editingLink, setEditingLink] = useState<LinkData | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    destinationUrl: '',
+    title: '',
+    description: '',
+  });
+
   // Clients state
   const [clients, setClients] = useState<Client[]>([]);
   const [showClientForm, setShowClientForm] = useState(false);
@@ -146,6 +155,42 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Error creating client:', error);
       alert('Müşteri oluşturulurken hata oluştu');
+    }
+  };
+
+  const openEditModal = (link: LinkData) => {
+    setEditingLink(link);
+    setEditFormData({
+      destinationUrl: link.destinationUrl,
+      title: link.title || '',
+      description: link.description || '',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLink) return;
+
+    try {
+      const res = await fetch(`/api/links/${editingLink._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editFormData),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setLinks(links.map((link) => (link._id === editingLink._id ? data.data : link)));
+        setShowEditModal(false);
+        setEditingLink(null);
+        alert('Link güncellendi! QR kod otomatik yenilendi.');
+      } else {
+        alert(data.error);
+      }
+    } catch (error) {
+      console.error('Error updating link:', error);
+      alert('Link güncellenirken hata oluştu');
     }
   };
 
@@ -412,6 +457,12 @@ export default function AdminPage() {
                           </div>
                           <div className="flex gap-2 mt-3">
                             <button
+                              onClick={() => openEditModal(link)}
+                              className="px-3 py-1 bg-blue-100 text-blue-800 rounded text-xs hover:bg-blue-200 transition"
+                            >
+                              Düzenle
+                            </button>
+                            <button
                               onClick={() => toggleActive(link._id, link.isActive)}
                               className={`px-3 py-1 rounded text-xs transition ${link.isActive ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}
                             >
@@ -518,6 +569,91 @@ export default function AdminPage() {
           )}
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {showEditModal && editingLink && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Link Düzenle</h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="mb-4 p-3 bg-gray-50 rounded">
+                <p className="text-sm text-gray-600">Kısa Kod:</p>
+                <code className="text-blue-600 font-mono">{baseUrl}/{editingLink.shortCode}</code>
+                <p className="text-xs text-gray-500 mt-2">
+                  ⚠️ Hedef URL değiştirildiğinde QR kod otomatik yeniden oluşturulur
+                </p>
+              </div>
+
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Hedef URL *
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    value={editFormData.destinationUrl}
+                    onChange={(e) => setEditFormData({ ...editFormData, destinationUrl: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    placeholder="https://example.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Başlık
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.title}
+                    onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    placeholder="Link başlığı"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Açıklama
+                  </label>
+                  <textarea
+                    value={editFormData.description}
+                    onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    placeholder="Link açıklaması"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                  >
+                    Güncelle
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition"
+                  >
+                    İptal
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
