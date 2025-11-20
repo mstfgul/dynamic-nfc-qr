@@ -4,10 +4,16 @@ import Link from '@/models/Link';
 import QRCode from 'qrcode';
 import { nanoid } from 'nanoid';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    const links = await Link.find().sort({ createdAt: -1 });
+
+    const searchParams = request.nextUrl.searchParams;
+    const clientId = searchParams.get('clientId');
+
+    const filter = clientId ? { clientId } : {};
+    const links = await Link.find(filter).sort({ createdAt: -1 }).populate('clientId', 'name company');
+
     return NextResponse.json({ success: true, data: links });
   } catch (error) {
     console.error('Error fetching links:', error);
@@ -23,7 +29,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { destinationUrl, title, description, customCode } = body;
+    const { destinationUrl, title, description, customCode, clientId } = body;
 
     if (!destinationUrl) {
       return NextResponse.json(
@@ -55,6 +61,7 @@ export async function POST(request: NextRequest) {
     });
 
     const link = await Link.create({
+      clientId: clientId || null,
       shortCode,
       destinationUrl,
       title,

@@ -8,17 +8,29 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
-    const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123';
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
 
-    if (password === adminPassword) {
-      sessionStorage.setItem('admin_authenticated', 'true');
-      router.push('/admin');
-    } else {
-      setError('Hatalı şifre!');
-      setPassword('');
+      const data = await res.json();
+
+      if (data.success) {
+        sessionStorage.setItem('admin_authenticated', 'true');
+        router.push('/admin');
+      } else {
+        setError('Hatalı şifre!');
+        setPassword('');
+      }
+    } catch (error) {
+      setError('Giriş yapılırken hata oluştu');
+      console.error('Login error:', error);
     }
   };
 
@@ -66,9 +78,18 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center">
+          <p className="text-xs text-gray-500 text-center mb-3">
             Sadece yetkili kullanıcılar için. QR kodlarınız herkese açık çalışmaya devam eder.
           </p>
+          <div className="flex justify-center gap-4 text-xs">
+            <a href="/privacy" className="text-blue-600 hover:underline">
+              Gizlilik Politikası
+            </a>
+            <span className="text-gray-300">•</span>
+            <a href="/terms" className="text-blue-600 hover:underline">
+              Hizmet Şartları
+            </a>
+          </div>
         </div>
       </div>
     </div>

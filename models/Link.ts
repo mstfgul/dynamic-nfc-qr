@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface ILink extends Document {
+  clientId?: mongoose.Types.ObjectId;
   shortCode: string;
   destinationUrl: string;
   title?: string;
@@ -14,6 +15,11 @@ export interface ILink extends Document {
 
 const LinkSchema = new Schema<ILink>(
   {
+    clientId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Client',
+      index: true,
+    },
     shortCode: {
       type: String,
       required: true,
